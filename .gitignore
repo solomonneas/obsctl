@@ -1,0 +1,11 @@
+# Editor / OS noise
+.DS_Store
+*.swp
+*~
+
+# Claude / superpowers artifacts
+.claude/
+.claude.local/
+**/memory-handoffs/
+.cursor/
+.windsurf/

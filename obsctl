@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+# obsctl — multi-host wrapper around obs-cmd (OBS WebSocket 5.x).
+# https://github.com/solomonneas/obsctl
+set -euo pipefail
+
+CONFIG="${OBSCTL_CONFIG:-$HOME/.config/obsctl/hosts.env}"
+
+# Handle commands that don't need a config first.
+case "${1:-}" in
+    -h|--help)
+        cat <<EOF
+obsctl <host-alias> <obs-cmd args...>
+
+Multi-host wrapper around obs-cmd (OBS WebSocket 5.x).
+
+Commands:
+  obsctl <alias> <args>   Forward to obs-cmd against the named host
+  obsctl init             Create a starter config at \$OBSCTL_CONFIG
+  obsctl --list           Show configured hosts (requires a config)
+  obsctl -h | --help      Show this help
+
+Config: \$OBSCTL_CONFIG (default ~/.config/obsctl/hosts.env)
+
+See https://github.com/solomonneas/obsctl for details.
+EOF
+        exit 0
+        ;;
+    init)
+        if [[ -e "$CONFIG" ]]; then
+            echo "obsctl: $CONFIG already exists; not overwriting" >&2
+            exit 1
+        fi
+        dir="$(dirname "$CONFIG")"
+        if [[ ! -d "$dir" ]]; then
+            mkdir -p "$dir"
+            # Only tighten perms on a directory we just created.
+            chmod 700 "$dir" 2>/dev/null || true
+        fi
+        cat > "$CONFIG" <<'STARTER'
+# obsctl host registry. Add as many hosts as you like.
+#
+# Each host is defined by three variables: <ALIAS>_HOST, <ALIAS>_PORT,
+# <ALIAS>_PASS (the alias is uppercased to find the variables). Then
+# add the lowercase alias to the HOSTS array.
+#
+# Passwords come from OBS Studio: Tools > WebSocket Server Settings.
+
+HOSTS=(local)
+
+LOCAL_HOST=127.0.0.1
+LOCAL_PORT=4455
+LOCAL_PASS=''   # paste the password from OBS
+
+# Example of a second host on your LAN:
+# HOSTS=(local studio)
+# STUDIO_HOST=192.168.1.42
+# STUDIO_PORT=4455
+# STUDIO_PASS='paste-the-password-here'
+STARTER
+        chmod 600 "$CONFIG"
+        echo "obsctl: wrote starter config to $CONFIG"
+        echo "  edit it to add your OBS hosts (paste the password from"
+        echo "  OBS > Tools > WebSocket Server Settings), then run 'obsctl <alias> info'."
+        exit 0
+        ;;
+esac
+
+if [[ ! -r "$CONFIG" ]]; then
+    cat >&2 <<EOF
+obsctl: cannot read $CONFIG
+
+Run 'obsctl init' to create a starter config, or set OBSCTL_CONFIG to point
+at an existing one.
+EOF
+    exit 1
+fi
+# shellcheck disable=SC1090
+source "$CONFIG"
+
+if [[ -z "${HOSTS+x}" || ${#HOSTS[@]} -eq 0 ]]; then
+    echo "obsctl: HOSTS array is empty in $CONFIG" >&2
+    exit 1
+fi
+
+usage() {
+    echo "obsctl <host-alias> <obs-cmd args...>"
+    echo
+    echo "Hosts (defined in $CONFIG):"
+    for h in "${HOSTS[@]}"; do
+        u="${h^^}"
+        host_var="${u}_HOST"
+        port_var="${u}_PORT"
+        printf "  %-12s %s:%s\n" "$h" "${!host_var:-?}" "${!port_var:-?}"
+    done
+    echo
+    echo "Examples:"
+    echo "  obsctl ${HOSTS[0]} info"
+    echo "  obsctl ${HOSTS[0]} scene list"
+    echo "  obsctl ${HOSTS[0]} scene switch \"Camera\""
+    echo "  obsctl ${HOSTS[0]} recording toggle"
+    echo "  obsctl ${HOSTS[0]} streaming toggle"
+    echo
+    echo "Run 'obs-cmd help' for the full upstream command list."
+    echo
+    echo "Flags:"
+    echo "  --list, --hosts   Show configured hosts and exit"
+    echo "  init              Write a starter config to \$OBSCTL_CONFIG"
+}
+
+case "${1:-}" in
+    ""|-h|--help|--list|--hosts) usage; exit 0 ;;
+esac
+
+host_alias="$1"; shift
+u="${host_alias^^}"
+host_var="${u}_HOST"
+port_var="${u}_PORT"
+pass_var="${u}_PASS"
+H="${!host_var:-}"
+P="${!port_var:-4455}"
+W="${!pass_var:-}"
+
+if [[ -z "$H" || -z "$W" ]]; then
+    echo "obsctl: host '$host_alias' is not fully configured in $CONFIG" >&2
+    echo "  expected variables: ${host_var}, ${port_var}, ${pass_var}" >&2
+    exit 3
+fi
+
+if ! command -v obs-cmd >/dev/null 2>&1; then
+    cat >&2 <<EOF
+obsctl: 'obs-cmd' not found on PATH
+
+Install grigio/obs-cmd: https://github.com/grigio/obs-cmd/releases
+On Linux: download the tarball, extract obs-cmd to /usr/local/bin/.
+EOF
+    exit 4
+fi
+
+exec obs-cmd -w "obsws://${H}:${P}/${W}" "$@"
