@@ -1,3 +1,4 @@
+<!-- content-guard: allow private-ipv4 file -->
 # obsctl
 
 `kubectl`-style multi-host wrapper around [grigio/obs-cmd](https://github.com/grigio/obs-cmd) for managing OBS Studio over the LAN.

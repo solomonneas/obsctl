@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # obsctl — multi-host wrapper around obs-cmd (OBS WebSocket 5.x).
 # https://github.com/solomonneas/obsctl
+# content-guard: allow private-ipv4 file
 set -euo pipefail
 
 CONFIG="${OBSCTL_CONFIG:-$HOME/.config/obsctl/hosts.env}"
