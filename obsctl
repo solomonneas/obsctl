@@ -159,4 +159,7 @@ EOF
     exit 4
 fi
 
-exec obs-cmd -w "obsws://${H}:${P}/${W}" "$@"
+# Pass the connection URL (which embeds the password) via the environment
+# rather than argv, so it never shows up in `ps` / /proc/*/cmdline.
+# obs-cmd reads OBS_WEBSOCKET_URL when -w is not given (obs-cmd --help).
+OBS_WEBSOCKET_URL="obsws://${H}:${P}/${W}" exec obs-cmd "$@"
