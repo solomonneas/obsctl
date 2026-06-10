@@ -78,7 +78,7 @@ Aliases are case-insensitive on the command line (`obsctl studio` resolves the s
 
 ## All `obs-cmd` verbs are available
 
-`obsctl <host> <whatever>` becomes `obs-cmd -w obsws://... <whatever>`. So anything `obs-cmd` understands works:
+`obsctl <host> <whatever>` becomes `obs-cmd <whatever>` with `OBS_WEBSOCKET_URL` set to the right `obsws://` URL (in the environment, not on the command line, so the password never shows up in `ps`). So anything `obs-cmd` understands works:
 
 ```bash
 obsctl studio scene list
@@ -129,13 +129,30 @@ That's the whole format. Keep it mode 0600 so other users on your box can't read
 
 ## Why bash, why not Python / Go / Rust?
 
-Because the actual work — talking to OBS — is done by `obs-cmd`. All `obsctl` does is dispatch the right URL to it. A 100-line bash wrapper has fewer moving parts than any of the alternatives. If you want a richer client, write your `obs-cmd` calls in your language of choice; this script is one possible UX, not the only one.
+Because the actual work, talking to OBS, is done by `obs-cmd`. All `obsctl` does is dispatch the right URL to it. A 100-line bash wrapper has fewer moving parts than any of the alternatives. If you want a richer client, write your `obs-cmd` calls in your language of choice; this script is one possible UX, not the only one.
+
+## Development
+
+Lint and test (this is exactly what CI runs):
+
+```bash
+shellcheck obsctl install.sh hooks/pre-push test/smoke.sh
+bash test/smoke.sh
+```
+
+This repo keeps its git hooks in the tracked `hooks/` directory. They are not active on a fresh clone; opt in with:
+
+```bash
+git config core.hooksPath hooks
+```
+
+The `pre-push` hook scans tracked files with [content-guard](https://github.com/solomonneas/content-guard) before anything leaves your machine. See [AGENTS.md](AGENTS.md) for the conventions it enforces.
 
 ## See also
 
-- [grigio/obs-cmd](https://github.com/grigio/obs-cmd) — the v5-protocol-native CLI we wrap
-- [obsproject/obs-websocket](https://github.com/obsproject/obs-websocket) — the WebSocket plugin bundled in OBS 28+
-- [solomonneas/deckctl](https://github.com/solomonneas/deckctl) — Stream Deck driver that wires OBS actions through these same hosts
+- [grigio/obs-cmd](https://github.com/grigio/obs-cmd): the v5-protocol-native CLI we wrap
+- [obsproject/obs-websocket](https://github.com/obsproject/obs-websocket): the WebSocket plugin bundled in OBS 28+
+- [solomonneas/deckctl](https://github.com/solomonneas/deckctl): Stream Deck driver that wires OBS actions through these same hosts
 
 ## License
 
