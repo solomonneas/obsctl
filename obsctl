@@ -4,6 +4,7 @@
 # content-guard: allow private-ipv4 file
 set -euo pipefail
 
+VERSION="0.1.0"
 CONFIG="${OBSCTL_CONFIG:-$HOME/.config/obsctl/hosts.env}"
 
 # Aliases become shell variable prefixes (<ALIAS>_HOST etc.), so they must be
@@ -26,11 +27,16 @@ Commands:
   obsctl init             Create a starter config at \$OBSCTL_CONFIG
   obsctl --list           Show configured hosts (requires a config)
   obsctl -h | --help      Show this help
+  obsctl -V | --version   Show the obsctl version
 
 Config: \$OBSCTL_CONFIG (default ~/.config/obsctl/hosts.env)
 
 See https://github.com/solomonneas/obsctl for details.
 EOF
+        exit 0
+        ;;
+    -V|--version)
+        echo "obsctl $VERSION"
         exit 0
         ;;
     init)
@@ -120,6 +126,7 @@ usage() {
     echo
     echo "Flags:"
     echo "  --list, --hosts   Show configured hosts and exit"
+    echo "  -V, --version     Show the obsctl version"
     echo "  init              Write a starter config to \$OBSCTL_CONFIG"
 }
 
