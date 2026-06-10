@@ -120,8 +120,10 @@ New-NetFirewallRule -DisplayName "OBS WebSocket" `
 
 `~/.config/obsctl/hosts.env` (or whatever `$OBSCTL_CONFIG` points at) is plain shell. It's sourced by `obsctl` at run time. Two requirements:
 
-1. `HOSTS=(alias1 alias2 ...)` — a bash array of the aliases you want to register.
+1. `HOSTS=(alias1 alias2 ...)`, a bash array of the aliases you want to register.
 2. For each alias, set three variables in uppercase: `<ALIAS>_HOST`, `<ALIAS>_PORT`, `<ALIAS>_PASS`.
+
+Aliases may only contain letters, digits, and underscores, and must not start with a digit, because they become shell variable names. Use `streaming_pc`, not `streaming-pc`.
 
 That's the whole format. Keep it mode 0600 so other users on your box can't read the passwords.
 

@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
-# obsctl — multi-host wrapper around obs-cmd (OBS WebSocket 5.x).
+# obsctl: multi-host wrapper around obs-cmd (OBS WebSocket 5.x).
 # https://github.com/solomonneas/obsctl
 # content-guard: allow private-ipv4 file
 set -euo pipefail
 
 CONFIG="${OBSCTL_CONFIG:-$HOME/.config/obsctl/hosts.env}"
+
+# Aliases become shell variable prefixes (<ALIAS>_HOST etc.), so they must be
+# valid variable names once uppercased: letters, digits, underscores, and not
+# starting with a digit.
+valid_alias() {
+    [[ "${1^^}" =~ ^[A-Z_][A-Z0-9_]*$ ]]
+}
 
 # Handle commands that don't need a config first.
 case "${1:-}" in
@@ -43,6 +50,10 @@ EOF
 # Each host is defined by three variables: <ALIAS>_HOST, <ALIAS>_PORT,
 # <ALIAS>_PASS (the alias is uppercased to find the variables). Then
 # add the lowercase alias to the HOSTS array.
+#
+# Aliases must use only letters, digits, and underscores (no hyphens),
+# and must not start with a digit, because they become shell variable
+# names. Use 'streaming_pc', not 'streaming-pc'.
 #
 # Passwords come from OBS Studio: Tools > WebSocket Server Settings.
 
@@ -88,6 +99,10 @@ usage() {
     echo
     echo "Hosts (defined in $CONFIG):"
     for h in "${HOSTS[@]}"; do
+        if ! valid_alias "$h"; then
+            printf "  %-12s (invalid alias: use only letters, digits, underscores)\n" "$h"
+            continue
+        fi
         u="${h^^}"
         host_var="${u}_HOST"
         port_var="${u}_PORT"
@@ -113,6 +128,13 @@ case "${1:-}" in
 esac
 
 host_alias="$1"; shift
+if ! valid_alias "$host_alias"; then
+    echo "obsctl: invalid host alias '$host_alias'" >&2
+    echo "  aliases may only contain letters, digits, and underscores," >&2
+    echo "  and must not start with a digit (they map to shell variables" >&2
+    echo "  like <ALIAS>_HOST). Try 'streaming_pc' instead of 'streaming-pc'." >&2
+    exit 2
+fi
 u="${host_alias^^}"
 host_var="${u}_HOST"
 port_var="${u}_PORT"
