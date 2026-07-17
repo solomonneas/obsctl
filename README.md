@@ -1,4 +1,3 @@
-<!-- content-guard: allow private-ipv4 file -->
 # obsctl
 
 `kubectl`-style multi-host wrapper around [grigio/obs-cmd](https://github.com/grigio/obs-cmd) for managing OBS Studio over the LAN.
@@ -65,11 +64,11 @@ LOCAL_HOST=127.0.0.1
 LOCAL_PORT=4455
 LOCAL_PASS='xxxxxxxxxxxxx'
 
-STUDIO_HOST=192.168.1.42
+STUDIO_HOST=192.0.2.10
 STUDIO_PORT=4455
 STUDIO_PASS='yyyyyyyyyyyyy'
 
-LAPTOP_HOST=192.168.1.137
+LAPTOP_HOST=198.51.100.20
 LAPTOP_PORT=4455
 LAPTOP_PASS='zzzzzzzzzzzzz'
 ```
@@ -105,7 +104,7 @@ Inside OBS:
 On the OBS host, allow inbound TCP `4455` from your LAN (or just the workstation running `obsctl`). On Linux + ufw:
 
 ```bash
-sudo ufw allow from 192.168.1.0/24 to any port 4455 proto tcp
+sudo ufw allow from 192.0.2.0/24 to any port 4455 proto tcp
 ```
 
 On Windows, PowerShell as admin:
@@ -129,7 +128,7 @@ That's the whole format. Keep it mode 0600 so other users on your box can't read
 
 ## Why bash, why not Python / Go / Rust?
 
-Because the actual work, talking to OBS, is done by `obs-cmd`. All `obsctl` does is dispatch the right URL to it. A 100-line bash wrapper has fewer moving parts than any of the alternatives. If you want a richer client, write your `obs-cmd` calls in your language of choice; this script is one possible UX, not the only one.
+Because the actual work, talking to OBS, is done by `obs-cmd`. All `obsctl` does is dispatch the right URL to it. If you want a richer client, write your `obs-cmd` calls in your language of choice; this script is one possible UX, not the only one.
 
 ## Development
 

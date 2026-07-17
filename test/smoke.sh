@@ -122,6 +122,33 @@ done
 check "obs-cmd missing exits 4" 4 env PATH="$nobin" "$BASH_BIN" "$OBSCTL" local info
 expect_out "obs-cmd missing message" "'obs-cmd' not found on PATH"
 
+# --- argument forwarding and credential transport --------------------------
+stubbin="$TMP/stub-bin"
+mkdir -p "$stubbin"
+cat > "$stubbin/obs-cmd" <<'STUB'
+#!/usr/bin/env bash
+printf 'url=%s\n' "${OBS_WEBSOCKET_URL:-}"
+printf 'argc=%s\n' "$#"
+for arg in "$@"; do
+    printf 'arg=%s\n' "$arg"
+    if [[ "$arg" == *demo-password* ]]; then
+        echo 'password-in-argv'
+    fi
+done
+STUB
+chmod +x "$stubbin/obs-cmd"
+printf "HOSTS=(studio)\nSTUDIO_HOST=192.0.2.10\nSTUDIO_PORT=4455\nSTUDIO_PASS='demo-password'\n" \
+    > "$OBSCTL_CONFIG"
+check "forwards command to obs-cmd" 0 env PATH="$stubbin:$PATH" \
+    "$BASH_BIN" "$OBSCTL" studio scene switch Camera
+expect_out "sets OBS WebSocket URL in the environment" \
+    "url=obsws://192.0.2.10:4455/demo-password"
+expect_out "forwards all command arguments" "argc=3"
+expect_out "forwards scene argument" "arg=scene"
+expect_out "forwards switch argument" "arg=switch"
+expect_out "forwards final argument" "arg=Camera"
+reject_out "does not pass password in argv" "password-in-argv"
+
 # ---------------------------------------------------------------------------
 echo
 echo "smoke: $((run - fails))/$run checks passed"
