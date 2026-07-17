@@ -6,6 +6,16 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- CI now uses the current checkout action.
+- Public network examples use documentation-only address ranges.
+
+### Tests
+
+- The smoke suite now checks command forwarding and confirms that the OBS
+  password is supplied through `OBS_WEBSOCKET_URL`, not argv.
+
 ## [0.1.0] - 2026-06-10
 
 ### Added

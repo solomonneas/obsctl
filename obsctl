@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # obsctl: multi-host wrapper around obs-cmd (OBS WebSocket 5.x).
 # https://github.com/solomonneas/obsctl
-# content-guard: allow private-ipv4 file
 set -euo pipefail
 
 VERSION="0.1.0"
@@ -71,7 +70,7 @@ LOCAL_PASS=''   # paste the password from OBS
 
 # Example of a second host on your LAN:
 # HOSTS=(local studio)
-# STUDIO_HOST=192.168.1.42
+# STUDIO_HOST=192.0.2.10
 # STUDIO_PORT=4455
 # STUDIO_PASS='paste-the-password-here'
 STARTER
